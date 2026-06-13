@@ -29,8 +29,8 @@ def create_app() -> FastAPI:
     app = FastAPI(title="FinAdvisor Copilot API", version="0.1.0")
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=_get_allowed_origins(),
-        allow_credentials=True,
+        allow_origins=["*"],
+        allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
     )
