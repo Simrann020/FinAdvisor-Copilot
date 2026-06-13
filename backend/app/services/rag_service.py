@@ -31,9 +31,12 @@ class RagService:
 
     def _named_people_in_query(self, query_lower: str) -> set[str]:
         """Return the set of person keys explicitly mentioned in the query."""
+        # strip punctuation so "bob martinez's" → "bob martinez"
+        cleaned = query_lower.replace("'s", "").replace("'", "").replace(",", "")
+        words = set(cleaned.split())
         mentioned = set()
         for person in self._KNOWN_PEOPLE:
-            if person["tokens"].issubset(set(query_lower.split())):
+            if person["tokens"].issubset(words):
                 mentioned.add(person["key"])
         return mentioned
 

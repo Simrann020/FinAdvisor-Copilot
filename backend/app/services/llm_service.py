@@ -1,22 +1,27 @@
 import os
 from typing import Dict, List
 
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", message=".*google.generativeai.*")
 import google.generativeai as genai
 from google.api_core.exceptions import GoogleAPIError, NotFound
 
 from app.core.config import settings
 
 STRICT_SYSTEM_PROMPT = (
-    "You are a compliance-aware financial copilot. "
-    "Answer ONLY using the provided context. "
-    "Do not invent, infer, or assume data that is not explicitly present in context. "
+    "You are a compliance-aware financial advisor copilot. "
+    "Answer ONLY using the provided context documents. "
+    "Give a thorough, well-structured response — use bullet points or short paragraphs where helpful. "
+    "Do not invent, infer, or assume any data not explicitly present in the context. "
     "Do not add source citations inline — they are shown separately in the UI. "
-    "If context is insufficient, say so clearly."
+    "If the question asks about a specific person, focus only on that person's information. "
+    "If context is insufficient to answer fully, say so clearly and summarise what IS available."
 )
 
 
 def generate_with_gemini(query: str, retrieved_docs: List[Dict[str, str | float]]) -> str:
-    if os.getenv("FINADVISOR_FAST_DEMO", "1") == "1":
+    if os.getenv("FINADVISOR_FAST_DEMO", "0") == "1":
         return _fast_local_response(query, retrieved_docs)
     if not settings.gemini_api_key:
         return _fallback_no_api_key(retrieved_docs)
