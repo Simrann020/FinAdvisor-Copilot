@@ -34,9 +34,15 @@ const AGENTS: { value: AgentOption; label: string; desc: string }[] = [
 
 const EXAMPLE_QUERIES = [
   "What is Alice Chen's risk tolerance?",
-  "Show me the global equity fund AUM",
-  "What were Q1 2026 market highlights?",
   "Summarise Bob Martinez's investment goals",
+  "What were Q1 2026 market highlights?",
+  "Show me the global equity fund AUM",
+  "What is Sarah Johnson's investment horizon?",
+  "Compare Alice Chen and Bob Martinez risk profiles",
+  "What are the key risks in the current market outlook?",
+  "Which clients are suitable for conservative fixed income products?",
+  "What is the fund's expense ratio?",
+  "Summarise Q1 2026 regional equity performance",
 ];
 
 function agentLabel(agent: string) {
@@ -56,7 +62,20 @@ export default function ChatPage() {
   const token = getToken();
 
   useEffect(() => {
-    if (!token) router.push("/login");
+    if (!token) { router.push("/login"); return; }
+    api.request<{ messages: Array<{
+      id: number; query: string; response: string;
+      agent_used: string; guardrail_triggered: boolean;
+    }> }>("/chat/history", { method: "GET", token })
+      .then(({ messages }) => {
+        const loaded: Message[] = [];
+        messages.forEach((m) => {
+          loaded.push({ id: `h-u-${m.id}`, role: "user", content: m.query, timestamp: new Date() });
+          loaded.push({ id: `h-a-${m.id}`, role: "assistant", content: m.response, agent_used: m.agent_used, guardrail_triggered: m.guardrail_triggered, timestamp: new Date() });
+        });
+        setMessages(loaded);
+      })
+      .catch(() => {});
   }, [router, token]);
 
   useEffect(() => {

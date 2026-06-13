@@ -25,6 +25,33 @@ def chat_status():
     return {"message": "Chat router ready for Phase 6 pipeline with RAG initialized"}
 
 
+@router.get("/history")
+def chat_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    limit: int = 50,
+) -> dict:
+    messages = (
+        db.query(ChatMessage)
+        .filter(ChatMessage.user_id == current_user.id)
+        .order_by(ChatMessage.id.asc())
+        .limit(limit)
+        .all()
+    )
+    return {
+        "messages": [
+            {
+                "id": m.id,
+                "query": m.query,
+                "response": m.response,
+                "agent_used": m.agent_used,
+                "guardrail_triggered": m.guardrail_triggered,
+            }
+            for m in messages
+        ]
+    }
+
+
 @router.post("/retrieve")
 def retrieve_context(payload: RetrieveRequest):
     results = rag_service.retrieve(payload.query, payload.top_k)
